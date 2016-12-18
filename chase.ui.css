@@ -1,0 +1,158 @@
+/*
+Chase
+Scott Clayton (c) 2016
+*/
+* 
+{
+	margin: 0;
+	padding: 0;
+}
+
+body 
+{
+	background-color: #AAA;
+}
+
+.hex
+{
+	position: relative;
+	padding-top: 28.867515px;
+	height: 57.73503px;
+	width: 100px;
+	display: inline-block;
+	margin-right: 4px;
+	margin-bottom: 3px;
+}
+
+.hex a
+{
+	position: absolute;
+	display: block;
+	width: 100px;
+	height: 57.73503px;
+	line-height: 57.73503px;
+	text-align: center;
+	font-size: 32px;
+	font-weight: bold;
+	background: #DDD;
+	z-index: 1;
+	text-decoration: none;
+	color: #333;
+	font-family: Tahoma;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.hex a:before
+{
+	position: absolute;
+	left: 0;
+	top: 0;
+	content: "";
+	display: block;
+	width: 100px;
+	height: 57.73503px;
+	background: #DDD;
+	transform: rotate(60deg);
+	-webkit-transform: rotate(60deg);
+	z-index: -1;
+}
+
+.hex a:after
+{
+	position: absolute;
+	left: 0;
+	top: 0;
+	content: "";
+	display: block;
+	width: 100px;
+	height: 57.73503px;
+	background: #DDD;
+	transform: rotate(-60deg);
+	-webkit-transform: rotate(-60deg);
+	z-index: -1;
+}
+
+.hex.red a
+{
+	color: #C00;
+}
+
+.hex.blue a
+{
+	color: #00C;
+}
+
+.hex a:hover,
+.hex a:hover:before,
+.hex a:hover:after
+{
+	background-color: #BBB;
+}
+
+.hex-board
+{
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	margin: -420px 0 0 -495px;
+	display: inline-block;
+	width: 1000px;
+	height: 850px;
+	padding-left: 7px;
+	padding-top: 7px;
+	box-sizing: border-box;
+	border-radius: 8px;
+	/*background-color: #EEE;*/
+	/*box-shadow: 0 0 100px rgba(0, 0, 0, 0.5);*/
+}
+
+.hex-board *
+{
+	box-sizing: content-box;
+}
+
+.hex-row
+{
+	font-size: 0;
+}
+
+.hex-row.offset
+{
+	padding-left: 52px;
+}
+
+.hex.selected a,
+.hex.selected a:before,
+.hex.selected a:after
+{
+	background-color: #FFF;
+}
+
+.hex.selected a:hover,
+.hex.selected a:hover:before,
+.hex.selected a:hover:after
+{
+	background-color: #EEE;
+}
+
+.hex.option a,
+.hex.option a:before,
+.hex.option a:after
+{
+	background-color: #EFE;
+}
+
+.hex.option a:hover,
+.hex.option a:hover:before,
+.hex.option a:hover:after
+{
+	background-color: #DFD;
+}
+
+
+

@@ -299,7 +299,7 @@ CHASE.AI = {
                     var targetIndex = CHASE.AI.Position.getDestinationIndexIfValidMove(move.toIndex, direction, 1, true);
                     var bumpMove = 
                     {
-                        fromIndex: move.ToIndex,
+                        fromIndex: move.toIndex,
                         toIndex: targetIndex,
                         increment: 0,
                         finalDirection: direction.d

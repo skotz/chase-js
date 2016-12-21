@@ -65,26 +65,26 @@ CHASE.AI = {
                 if (i > 1 || isBounce)
                 {
                     // Check for richochets
-                    if (direction == CHASE.AI.Direction.UpRight && index >= 0 && index <= 8)
+                    if (direction.d == CHASE.AI.Direction.UpRight && index >= 0 && index <= 8)
                     {
-                        direction = CHASE.AI.Direction.DownRight;
+                        direction.d = CHASE.AI.Direction.DownRight;
                     }
-                    else if (direction == CHASE.AI.Direction.UpLeft && index >= 0 && index <= 8)
+                    else if (direction.d == CHASE.AI.Direction.UpLeft && index >= 0 && index <= 8)
                     {
-                        direction = CHASE.AI.Direction.DownLeft;
+                        direction.d = CHASE.AI.Direction.DownLeft;
                     }
-                    else if (direction == CHASE.AI.Direction.DownLeft && index >= 72 && index <= 80)
+                    else if (direction.d == CHASE.AI.Direction.DownLeft && index >= 72 && index <= 80)
                     {
-                        direction = CHASE.AI.Direction.UpLeft;
+                        direction.d = CHASE.AI.Direction.UpLeft;
                     }
-                    else if (direction == CHASE.AI.Direction.DownRight && index >= 72 && index <= 80)
+                    else if (direction.d == CHASE.AI.Direction.DownRight && index >= 72 && index <= 80)
                     {
-                        direction = CHASE.AI.Direction.UpRight;
+                        direction.d = CHASE.AI.Direction.UpRight;
                     }
                 }
 
                 // Move one tile
-                index = CHASE.AI.Position.getIndexInDirection(index, direction);
+                index = CHASE.AI.Position.getIndexInDirection(index, direction.d);
 
                 if (index == -1)
                 {
@@ -186,8 +186,8 @@ CHASE.AI = {
                             {
                                 // Find physical moves
                                 // Move in a direction for as many tiles as the value of the die on that tile
-                                var movement = direction;
-                                destination = CHASE.AI.Position.getDestinationIndexIfValidMove(i, movement, Math.abs(position.tiles[i]), false); // TODO: need to get the final direction in movement (pass by ref?)
+                                var movement = {d: direction};
+                                destination = CHASE.AI.Position.getDestinationIndexIfValidMove(i, movement, Math.abs(position.tiles[i]), false);
 
                                 if (destination != -1)
                                 {
@@ -196,14 +196,14 @@ CHASE.AI = {
                                         fromIndex: i,
                                         toIndex: destination,
                                         increment: 0,
-                                        finalDirection: movement
+                                        finalDirection: movement.d
                                     });
                                 }
 
                                 // Find point distribution moves
                                 if (position.tiles[i] > 1 || position.tiles[i] < -1)
                                 {
-                                    destination = CHASE.AI.Position.getDestinationIndexIfValidMove(i, movement, 1, false); // TODO: ref movement
+                                    destination = CHASE.AI.Position.getDestinationIndexIfValidMove(i, movement, 1, false);
 
                                     if (destination != -1)
                                     {
@@ -224,7 +224,7 @@ CHASE.AI = {
                                                         fromIndex: i,
                                                         toIndex: destination,
                                                         increment: points,
-                                                        finalDirection: movement
+                                                        finalDirection: movement.d
                                                     });
                                                 }
                                             }
@@ -295,14 +295,14 @@ CHASE.AI = {
                 if ((sourcePiece > 0 && position.tiles[move.toIndex] > 0) || (sourcePiece < 0 && position.tiles[move.toIndex] < 0))
                 {
                     // Figure out what move needs to be made to move the bumbed piece
-                    var direction = move.finalDirection;
+                    var direction = {d: move.finalDirection};
                     var targetIndex = CHASE.AI.Position.getDestinationIndexIfValidMove(move.toIndex, direction, 1, true);
                     var bumpMove = 
                     {
                         fromIndex: move.ToIndex,
                         toIndex: targetIndex,
                         increment: 0,
-                        finalDirection: direction
+                        finalDirection: direction.d
                     };
 
                     // Recursively make the bump move(s)

@@ -154,5 +154,152 @@ body
 	background-color: #DFD;
 }
 
+/* Menu */
 
 
+.hex-menu
+{
+	position: absolute;
+	transform: scale(0.5);
+	top: 0;
+	left: 0;
+	z-index: 1000;
+	width: 322px;
+    height: 308px;
+	display: none;
+}
+
+.hex-menu-item
+{
+	position: absolute;
+	padding-top: 28.867515px;
+	height: 57.73503px;
+	width: 100px;
+	display: inline-block;
+	margin-right: 4px;
+	margin-bottom: 3px;
+}
+
+.hex-menu-item a
+{
+	position: absolute;
+	display: block;
+	width: 100px;
+	height: 57.73503px;
+	line-height: 57.73503px;
+	text-align: center;
+	font-size: 32px;
+	font-weight: bold;
+	background: #333;
+	z-index: 1;
+	text-decoration: none;
+	color: #FFF;
+	font-family: Tahoma;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.hex-menu-item a:before
+{
+	position: absolute;
+	left: 0;
+	top: 0;
+	content: "";
+	display: block;
+	width: 100px;
+	height: 57.73503px;
+	background: #333;
+	transform: rotate(60deg);
+	-webkit-transform: rotate(60deg);
+	z-index: -1;
+}
+
+.hex-menu-item a:after
+{
+	position: absolute;
+	left: 0;
+	top: 0;
+	content: "";
+	display: block;
+	width: 100px;
+	height: 57.73503px;
+	background: #333;
+	transform: rotate(-60deg);
+	-webkit-transform: rotate(-60deg);
+	z-index: -1;
+}
+
+.disabled-menu *
+{
+	opacity: 0.5;
+	cursor: not-allowed;
+	background: #333;
+}
+
+.hex-menu-item.disabled-menu a:hover,
+.hex-menu-item.disabled-menu a:hover:before,
+.hex-menu-item.disabled-menu a:hover:after
+{
+	background: #333;
+}
+
+.hex-menu-item a:hover,
+.hex-menu-item a:hover:before,
+.hex-menu-item a:hover:after
+{
+	background-color: #666;
+}
+
+#menu1 
+{
+	left: 163px;
+	top: 7px;
+}
+
+#menu2 
+{
+	left: 215px;
+	top: 97px;
+}
+
+#menu3 
+{
+	left: 163px;
+	top: 187px;
+}
+
+#menu4
+{
+	left: 59px;
+	top: 187px;
+}
+
+#menu5 
+{
+	left: 7px;
+	top: 97px;
+}
+
+#menu6 
+{
+	left: 59px;
+	top: 7px;
+}
+
+#menu6 a,
+#menu6 a:before,
+#menu6 a:after
+{
+	background-color: #833;
+}
+
+#menu6 a:hover,
+#menu6 a:hover:before,
+#menu6 a:hover:after
+{
+	background-color: #A33;
+}

@@ -138,7 +138,7 @@ CHASE.AI = {
 				}
 
                 // Find out how what the new value of this piece will be and if we have any points left over
-                var maxTo = 10 - smallest;
+                var maxTo = 6 - smallest;
                 var max = Math.min(maxTo, position.pointsToDistribute);
 
                 if (player == CHASE.AI.Player.Red)
@@ -213,7 +213,7 @@ CHASE.AI = {
                                             {
                                                 // Figure out what we're allowed to transfer
                                                 var maxFrom = Math.abs(position.tiles[i]) - 1;
-                                                var maxTo = 10 - Math.abs(position.tiles[destination]);
+                                                var maxTo = 6 - Math.abs(position.tiles[destination]);
                                                 var max = Math.min(maxFrom, maxTo);
 
                                                 // Create a move for each possible point transfer

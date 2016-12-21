@@ -9,6 +9,8 @@ CHASE.UI = {
 	// Generate the HTML for the board upon first load
 	init: function($container) {
 		var index = 0;
+		
+		// Generate the markup for the board
 		$container.append("<div class=\"hex-board\"></div>");
 		var $board = $container.children(".hex-board");
 		for (var row = 0; row < 9; row++) {
@@ -20,11 +22,25 @@ CHASE.UI = {
 			}
 		}
 		
+		// Generate the markup for the point transfer menu
+		$board.append("<div class=\"hex-menu\"></div>");
+		var $rowm = $board.children(".hex-menu").last();
+		for (var tile = 1; tile < 6; tile++) {
+			$rowm.append("<div class=\"hex-menu-item\" id=\"menu" + tile + "\"><a href=\"javascript:void(0)\">" + tile + "</a></div>");
+		}
+		$rowm.append("<div class=\"hex-menu-item\" id=\"menu6\"><a href=\"javascript:void(0)\">&#x2716;</a></div>");
+		$("#menu6").click(function() {
+			$(".hex-menu").fadeOut();
+		});
+		
+		// Start the game
 		CHASE.AI.NewGame();
 		
+		// Initialize click handlers for each tile
 		$container.on("click", ".hex a", function() {
 			var $tile = $(this).parent();
-			var index = $tile.prop("id").replace("tile", "");
+			var index = $tile.prop("id").replace("tile", "");	
+			$(".hex-menu").fadeOut();		
 			
 			if (CHASE.UI.selectedFromIndex > 0) {
 				if (CHASE.UI.selectedFromIndex == index) {
@@ -34,12 +50,36 @@ CHASE.UI = {
 					CHASE.UI.selectedToIndex = index;
 					
 					var moves = CHASE.AI.Position.getValidMoves(CHASE.AI.Board);
+					
+					// Look for moves that transfer a piece value
+					var transfers = [];
 					for (var i = 0; i < moves.length; i++) {
-						if (moves[i].fromIndex == CHASE.UI.selectedFromIndex && moves[i].toIndex == CHASE.UI.selectedToIndex) {
-							CHASE.AI.Position.makeMove(CHASE.AI.Board, moves[i], true, -1);							
-							CHASE.UI.selectedFromIndex = -1;
-							CHASE.UI.selectedToIndex = -1;
-							break;
+						if (moves[i].fromIndex == CHASE.UI.selectedFromIndex && moves[i].toIndex == CHASE.UI.selectedToIndex && moves[i].increment > 0) {
+							transfers.push(moves[i].increment);
+						}
+					}
+					
+					if (transfers.length > 0) {
+						// Initialize all the valid point transfer options
+						$("#menu1, #menu2, #menu3, #menu4, #menu5").addClass("disabled-menu");
+						for (var i = 0; i < transfers.length; i++) {
+							$("#menu" + transfers[i]).removeClass("disabled-menu");
+						}
+						
+						// Show the menu
+						$(".hex-menu").css("left", $tile.position().left + $tile.width() / 2 - $(".hex-menu").width());
+						$(".hex-menu").css("top", $tile.position().top + $tile.height() / 2 - $(".hex-menu").height() + 28.867515);
+						$(".hex-menu").fadeIn();
+					}
+					else {
+						// Look for valid moves with the given source and target square
+						for (var i = 0; i < moves.length; i++) {
+							if (moves[i].fromIndex == CHASE.UI.selectedFromIndex && moves[i].toIndex == CHASE.UI.selectedToIndex) {
+								CHASE.AI.Position.makeMove(CHASE.AI.Board, moves[i], true, -1);							
+								CHASE.UI.selectedFromIndex = -1;
+								CHASE.UI.selectedToIndex = -1;
+								break;
+							}
 						}
 					}
 				}
@@ -69,6 +109,28 @@ CHASE.UI = {
 			CHASE.UI.refresh();
 			
 			CHASE.UI.log("Clicked Index " + index);
+		});
+		
+		// Initialize click handlers for each point transfer menu option
+		$container.on("click", "#menu1, #menu2, #menu3, #menu4, #menu5", function() {
+			var $option = $(this);
+			if (!$option.hasClass("disabled-menu")) {
+				var increment = $option.prop("id").replace("menu", "");
+				
+				// Make the move
+				var moves = CHASE.AI.Position.getValidMoves(CHASE.AI.Board);
+				for (var i = 0; i < moves.length; i++) {
+					if (moves[i].fromIndex == CHASE.UI.selectedFromIndex && moves[i].toIndex == CHASE.UI.selectedToIndex && moves[i].increment == increment) {
+						$(".hex-menu").fadeOut();
+						CHASE.AI.Position.makeMove(CHASE.AI.Board, moves[i], true, -1);							
+						CHASE.UI.selectedFromIndex = -1;
+						CHASE.UI.selectedToIndex = -1;
+						break;
+					}
+				}
+			}
+			
+			CHASE.UI.refresh();
 		});
 		
 		CHASE.UI.refresh();

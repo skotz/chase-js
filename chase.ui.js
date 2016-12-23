@@ -42,7 +42,7 @@ CHASE.UI = {
 			var index = $tile.prop("id").replace("tile", "");	
 			$(".hex-menu").fadeOut();		
 			
-			if (CHASE.UI.selectedFromIndex > 0) {
+			if (CHASE.UI.selectedFromIndex >= 0) {
 				if (CHASE.UI.selectedFromIndex == index) {
 					// Unselect an already selected tile
 					CHASE.UI.selectedFromIndex = -1;

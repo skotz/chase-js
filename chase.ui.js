@@ -23,6 +23,9 @@ CHASE.UI = {
 			}
 		}
 		
+		// Add the game over background
+		$container.append("<div class=\"game-over\"></div>");
+		
 		// Generate the markup for the point transfer menu
 		$board.append("<div class=\"hex-menu\"></div>");
 		var $rowm = $board.children(".hex-menu").last();
@@ -41,7 +44,14 @@ CHASE.UI = {
 		$container.on("click", ".hex a", function() {
 			var $tile = $(this).parent();
 			var index = $tile.prop("id").replace("tile", "");	
-			$(".hex-menu").fadeOut();		
+			$(".hex-menu").fadeOut();
+			
+			// Don't allow moves after the game is over
+			if (CHASE.AI.Position.getWinner(CHASE.AI.Board) != 0) {
+				CHASE.UI.selectedFromIndex = -1;
+				CHASE.UI.selectedToIndex = -1;
+				return;
+			}
 			
 			if (CHASE.UI.selectedFromIndex >= 0) {
 				if (CHASE.UI.selectedFromIndex == index) {
@@ -76,7 +86,7 @@ CHASE.UI = {
 						// Look for valid moves with the given source and target square
 						for (var i = 0; i < moves.length; i++) {
 							if (moves[i].fromIndex == CHASE.UI.selectedFromIndex && moves[i].toIndex == CHASE.UI.selectedToIndex) {
-								CHASE.AI.Position.makeMove(moves[i]);							
+								CHASE.AI.Position.makeMove(moves[i]);
 								CHASE.UI.selectedFromIndex = -1;
 								CHASE.UI.selectedToIndex = -1;
 								break;
@@ -147,6 +157,7 @@ CHASE.UI = {
 	// Refresh the board on the screen
 	refresh: function() {
 		var position = CHASE.AI.Board;
+		var winner = CHASE.AI.Position.getWinner(CHASE.AI.Board);
 		
 		// Refresh the values of the pieces on the board
 		for (var i = 0; i < 81; i++) {
@@ -198,7 +209,7 @@ CHASE.UI = {
 		}
 		
 		// Highlight tiles we can add points to after a capture
-		if (CHASE.AI.Board.pointsToDistribute > 0) {
+		if (CHASE.AI.Board.pointsToDistribute > 0 && winner == 0) {
 			var moves = CHASE.AI.Position.getValidMoves(CHASE.AI.Board);
 			for (var i = 0; i < moves.length; i++) {
 				if (moves[i].increment > 0) {
@@ -214,14 +225,15 @@ CHASE.UI = {
 		var threats = CHASE.AI.Position.getThreatenedPieces(CHASE.AI.Board);
 		for (var i = 0; i < threats.length; i++) {
 			$("#tile" + threats[i]).addClass("threatened");
-		}		
+		}
 		
 		// See if there's a winner
-		var winner = CHASE.AI.Position.getWinner(CHASE.AI.Board);
+		$(".game-over").removeClass("blue-wins");
+		$(".game-over").removeClass("red-wins");
 		if (winner == CHASE.AI.Player.Blue) {
-			alert("Blue Wins!");
+			$(".game-over").addClass("blue-wins");
 		} else if (winner == CHASE.AI.Player.Red) {
-			alert("Red Wins!");
+			$(".game-over").addClass("red-wins");
 		}
 		
 		// Have the computer make a move

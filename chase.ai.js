@@ -525,7 +525,11 @@ CHASE.AI = {
         makeMove: function(move)
         {
 			CHASE.AI.Position.makeMoveInternal(CHASE.AI.Board, move, true, -1);
-			CHASE.AI.LastMove = move;
+			
+			// Record the last move (that wasn't a point distribution after a capture)
+			if (move.fromIndex >= 0) {
+				CHASE.AI.LastMove = move;
+			}
 		},
 		
 		// Make a move on a board

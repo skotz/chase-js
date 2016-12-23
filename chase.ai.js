@@ -31,9 +31,17 @@ CHASE.AI = {
 	
 	// Engine for finding good moves
 	Search: {
+		// Count how many evaluations we're making
+		evaluations: 0,
+		
+		// Save the start of our search
+		startTime: null,
+		
 		// Evaluate a position
 		evaluate: function(position, currentDepth)
         {
+			CHASE.AI.Search.evaluations++;
+			
             var bluePieces = 0;
             var redPieces = 0;
 
@@ -115,6 +123,8 @@ CHASE.AI = {
 		// Find the best move in a given position
 		getBestMove: function(position, depth) 
 		{
+			CHASE.AI.Search.evaluations = 0;
+			CHASE.AI.Search.startTime = +new Date();
 			return CHASE.AI.Search.alphaBeta(position, -10000000, 10000000, depth * 2, 1, position.playerToMove);
 		},
 		
@@ -207,7 +217,11 @@ CHASE.AI = {
 
                 if (depthUp == 1)
                 {
-					console.log("Searched " + m + " of " + moves.length);
+					var timeNow = +new Date();
+					var seconds = (timeNow - CHASE.AI.Search.startTime) / 1000;
+					var nps = Math.round(CHASE.AI.Search.evaluations / seconds);
+					
+					console.log("nps: " + nps + " move: " + m + "/" + moves.length);
                 }
             }
             

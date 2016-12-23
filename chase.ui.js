@@ -5,6 +5,7 @@ window.CHASE = window.CHASE || { };
 CHASE.UI = {
 	selectedFromIndex: -1,
 	selectedToIndex: -1,
+	searchDepth: 2,
 	
 	// Generate the HTML for the board upon first load
 	init: function($container) {
@@ -138,7 +139,7 @@ CHASE.UI = {
 	
 	// Force the computer to make a move
 	makeBestMove: function() {
-		var move = CHASE.AI.Search.getBestMove(CHASE.AI.Board, 2);
+		var move = CHASE.AI.Search.getBestMove(CHASE.AI.Board, CHASE.UI.searchDepth);
 		CHASE.AI.Position.makeMove(move.bestMove);
 		CHASE.UI.refresh();
 	},
@@ -218,7 +219,7 @@ CHASE.UI = {
 		
 		// Have the computer make a move
 		if (CHASE.AI.Board.playerToMove == CHASE.AI.Player.Blue) {
-			CHASE.UI.makeBestMove();
+			setTimeout(CHASE.UI.makeBestMove, 1);
 		}
 	},
 	

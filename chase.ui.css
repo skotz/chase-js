@@ -161,6 +161,20 @@ body
 	background-color: #FFA;
 }
 
+.hex.threatened a,
+.hex.threatened a:before,
+.hex.threatened a:after
+{
+	background-color: #FCC;
+}
+
+.hex.threatened a:hover,
+.hex.threatened a:hover:before,
+.hex.threatened a:hover:after
+{
+	background-color: #FAA;
+}
+
 /* Menu */
 
 .hex-menu

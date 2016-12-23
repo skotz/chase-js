@@ -209,6 +209,13 @@ CHASE.UI = {
 			}
 		}
 		
+		// Highlight threatened pieces
+		$(".hex").removeClass("threatened");
+		var threats = CHASE.AI.Position.getThreatenedPieces(CHASE.AI.Board);
+		for (var i = 0; i < threats.length; i++) {
+			$("#tile" + threats[i]).addClass("threatened");
+		}		
+		
 		// See if there's a winner
 		var winner = CHASE.AI.Position.getWinner(CHASE.AI.Board);
 		if (winner == CHASE.AI.Player.Blue) {

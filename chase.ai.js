@@ -336,6 +336,50 @@ CHASE.AI = {
             return -1;
         },
 		
+		// Get the indexes of all the pieces for the player to move that are under immediate attack
+		getThreatenedPieces: function(position)
+        {
+            var threats = [];
+			
+			var copyFirst = CHASE.AI.Position.clone(position);
+			copyFirst.playerToMove = position.playerToMove == CHASE.AI.Player.Blue ? CHASE.AI.Player.Red : CHASE.AI.Player.Blue;
+            var moves = CHASE.AI.Position.getValidMoves(copyFirst);
+
+			for (var m = 0; m < moves.length; m++)
+			{
+				var move = moves[m];				
+                var copy = CHASE.AI.Position.clone(position);
+				
+                CHASE.AI.Position.makeMoveInternal(copy, move, true, -1);
+
+                for (var i = 0; i < 81; i++)
+                {
+                    if (position.playerToMove == CHASE.AI.Player.Blue)
+                    {
+                        if (position.tiles[i] > 0 && copy.tiles[i] < 0)
+                        {
+							if (threats.indexOf(i) == -1)
+							{
+								threats.push(i);
+							}
+                        }
+                    }
+                    else
+                    {
+                        if (position.tiles[i] < 0 && copy.tiles[i] > 0)
+                        {
+							if (threats.indexOf(i) == -1)
+							{
+								threats.push(i);
+							}
+                        }
+                    }
+                }
+            }
+
+            return threats;   
+        },
+		
 		// Get all the valid moves in a position
         getValidMoves: function(position)
         {

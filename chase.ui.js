@@ -199,15 +199,22 @@ CHASE.UI = {
 	}
 };
 
+/*$(document).ready(function() {
+	function doResize() {
+	  var scale = Math.min(
+		$(window).width() / $("#chase > div").width(),    
+		$(window).height() / $("#chase > div").outerHeight()
+	  );	  
+	  $("#chase > div").css({
+		transform: "scale(" + scale + ")"
+	  });
+	}
+
+	setInterval(doResize, 1000);
+});*/
+
 $(document).ready(function() {
 	// Initialize the game
 	CHASE.UI.init($("#chase"));
 });
 
-/*
-	<div class="hex-board">
-		<div class="hex-row offset">
-			<div class="hex blue">
-				<a href="javascript:void(0)">1</a>
-			</div>
-			*/

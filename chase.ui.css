@@ -96,19 +96,12 @@ body
 
 .hex-board
 {
-	position: absolute;
-	left: 50%;
-	top: 50%;
-	margin: -420px 0 0 -495px;
-	display: inline-block;
-	width: 1000px;
+	margin: 20px auto;
+	display: block;
+	width: 1002px;
 	height: 850px;
-	padding-left: 7px;
-	padding-top: 7px;
+	padding: 0 7px;
 	box-sizing: border-box;
-	border-radius: 8px;
-	/*background-color: #EEE;*/
-	/*box-shadow: 0 0 100px rgba(0, 0, 0, 0.5);*/
 }
 
 .hex-board *
@@ -155,7 +148,6 @@ body
 }
 
 /* Menu */
-
 
 .hex-menu
 {

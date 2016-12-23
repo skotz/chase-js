@@ -147,6 +147,20 @@ body
 	background-color: #DFD;
 }
 
+.hex.last-move a,
+.hex.last-move a:before,
+.hex.last-move a:after
+{
+	background-color: #FFC;
+}
+
+.hex.last-move a:hover,
+.hex.last-move a:hover:before,
+.hex.last-move a:hover:after
+{
+	background-color: #FFA;
+}
+
 /* Menu */
 
 .hex-menu

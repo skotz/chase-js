@@ -5,6 +5,9 @@ CHASE.AI = {
 	// The currently running game
 	Board: null,
 	
+	// The last move made
+	LastMove: null,
+	
 	// Start a new game
 	NewGame: function() {
 		CHASE.AI.Board = CHASE.AI.Position.newGame();
@@ -24,6 +27,192 @@ CHASE.AI = {
 	Player: {
 		Red: -1,
         Blue: 1
+	},
+	
+	// Engine for finding good moves
+	Search: {
+		// Evaluate a position
+		evaluate: function(position, currentDepth)
+        {
+            var bluePieces = 0;
+            var redPieces = 0;
+
+            var blueGoodPieces = 0;
+            var redGoodPieces = 0;
+
+            // Material (number of pieces) difference
+            for (var i = 0; i < 81; i++)
+            {
+                if (position.tiles[i] > 0)
+                {
+                    bluePieces++;
+
+                    if (position.tiles[i] == 4 || position.tiles[i] == 5)
+                    {
+                        // 4s and 5s are good
+                        blueGoodPieces++;
+                    }
+                    else if (position.tiles[i] == 6)
+                    {
+                        // 6s are bad
+                        blueGoodPieces--;
+                    }
+                }
+                else if (position.tiles[i] < 0)
+                {
+                    redPieces++;
+
+                    if (position.tiles[i] == -4 || position.tiles[i] == -5)
+                    {
+                        redGoodPieces++;
+                    }
+                    else if (position.tiles[i] == -6)
+                    {
+                        redGoodPieces--;
+                    }
+                }
+            }
+
+            // Game over scores
+            if (bluePieces < 5)
+            {
+                // Give slightly better evaluations to the faster forced win
+                return -10000 + currentDepth;
+            }
+            else if (redPieces < 5)
+            {
+                return 10000 - currentDepth;
+            }
+            else
+            {
+                var evalScore = 0;
+
+                // Just the difference between the piece count between blue and red
+                // eval += (bluePieces - redPieces) * Constants.EvalPieceWeight;
+
+                // Figure in the ideal value of pieces
+                // Range: [-4 - 5, 5 - (-4)] --> [-9, 9]
+                evalScore += (blueGoodPieces - redGoodPieces);
+
+                // Just subtracting red from blue results in the same score for (blue = 6, red = 5) and (blue = 10, red = 9) even thought the lead of 1 means more in the first case
+                // This calculation figures in that an extra piece means more the fewer you have, so... 
+                // (blue = 6, red = 5) --> (6 * 100) / 5 - 100 = 20
+                // (blue = 10, red = 9) --> (10 * 100) / 9 - 100 = 11
+                // Range: [-(10 * 100) / 5 - 100, (10 * 100) / 5 - 100] --> [-100, 100]
+                if (bluePieces > redPieces)
+                {
+                    evalScore += (bluePieces * 100) / redPieces - 100;
+                }
+                else if (redPieces > bluePieces)
+                {
+                    evalScore -= (redPieces * 100) / bluePieces - 100;
+                }
+
+                return evalScore * 10;
+            }
+        },
+		
+		// Find the best move in a given position
+		getBestMove: function(position, depth) 
+		{
+			return CHASE.AI.Search.alphaBeta(position, -10000000, 10000000, depth * 2, 1, position.playerToMove);
+		},
+		
+		// Mini-Max with Alpha-Beta pruning
+		alphaBeta: function(position, alpha, beta, depth, depthUp, initiatingPlayer)
+        {
+            // Evaluate the position
+            var evalScore = CHASE.AI.Search.evaluate(position, depthUp);
+
+            // See if someone won
+            if (Math.abs(evalScore) >= 9900)
+            {
+				var node = {};
+				node.score = evalScore;
+				node.pv = evalScore > 0 ? "BLUE-WINS" : "RED-WINS";
+                return node;
+            }
+
+            // We've reached the depth of our search, so return the heuristic evaluation of the position
+            // Make sure we're evaluating after our opponent's last move (meaning it's our turn to move again) so that we calculate full move pairs
+            if (depth <= 0 && position.playerToMove == initiatingPlayer)
+            {
+				var node = {};
+				node.score = evalScore;
+				node.pv = "";
+                return node;
+            }
+
+            var maximizingPlayer = position.playerToMove == CHASE.AI.Player.Blue;
+            var best = {};
+            best.score = maximizingPlayer ? -10000000 : 10000000;
+
+            var moves = CHASE.AI.Position.getValidMoves(position);
+
+            // If we have no moves, return the evaluation of the position
+            if (moves.length == 0)
+            {
+				var node = {};
+				node.score = evalScore;
+				node.pv = "";
+                return node;
+            }
+
+            var movenum = 1;
+			for (var m = 0; m < moves.length; m++)
+            {
+				var move = moves[m];
+				
+                // Copy the board and make a move
+                var copy = CHASE.AI.Position.clone(position);
+                CHASE.AI.Position.makeMoveInternal(copy, move);
+				
+                // Find opponents best counter move
+                var child = CHASE.AI.Search.alphaBeta(copy, alpha, beta, depth - 1, depthUp + 1, initiatingPlayer);
+
+                if (maximizingPlayer)
+                {
+                    if (child.score > best.score)
+                    {
+                        best.score = child.score;
+                        best.bestMove = move;
+                        // best.pv = move.ToString() + " " + child.pv;
+                    }
+
+                    alpha = Math.max(alpha, best.score);
+
+                    if (beta <= alpha)
+                    {
+                        // Beta cutoff
+                        break;
+                    }
+                }
+                else
+                {
+                    if (child.score < best.score)
+                    {
+                        best.score = child.score;
+                        best.bestMove = move;
+                        // best.pv = move.ToString() + " " + child.pv;
+                    }
+                    
+                    beta = Math.min(beta, best.score);
+                    
+                    if (beta <= alpha)
+                    {
+                        // Alpha cutoff
+                        break;
+                    }
+                }
+
+                if (depthUp == 1)
+                {
+					console.log("Searched " + m + " of " + moves.length);
+                }
+            }
+            
+            return best;
+        }
 	},
 	
 	// Represents the state of the board
@@ -51,6 +240,26 @@ CHASE.AI = {
 			};
 		},
 		
+		// Deep copy a position
+		clone: function(position) {
+			return {
+				tiles: position.tiles.slice(0),
+				pointsToDistribute: position.pointsToDistribute,
+				playerToMove: position.playerToMove
+			};
+		},
+		
+		// Returns the winner (if there is one)
+		getWinner: function(position) {
+			if (CHASE.AI.Position.countPieces(position, CHASE.AI.Player.Blue) < 5) {
+				return CHASE.AI.Player.Red;
+			} else if (CHASE.AI.Position.countPieces(position, CHASE.AI.Player.Red) < 5) {
+				return CHASE.AI.Player.Blue;
+			} else {
+				return 0;
+			}
+		},
+		
 		// Get the index of the tile 1 move away from a given source tile and direction
 		getIndexInDirection: function(sourceIndex, direction) {
 			return CHASE.AI.Position.tileDirectionTable[sourceIndex][direction];
@@ -58,7 +267,7 @@ CHASE.AI = {
 		
 		// Check if it's possible to move a piece from a given tile in a given direction a given number of tiles.
         // If the move is valid then the destination index will be returned.
-		getDestinationIndexIfValidMove: function(sourceIndex, direction, distance, isBounce) {
+		getDestinationIndexIfValidMove: function(position, sourceIndex, direction, distance, isBounce) {
             var index = sourceIndex;
             for (var i = 1; i <= distance; i++)
             {
@@ -98,7 +307,7 @@ CHASE.AI = {
                 }
 
                 // Did we hit another piece (blue or red) before the end of our distance?
-                if (CHASE.AI.Board.tiles[index] != 0)
+                if (position.tiles[index] != 0)
                 {
                     return -1;
                 }
@@ -187,7 +396,7 @@ CHASE.AI = {
                                 // Find physical moves
                                 // Move in a direction for as many tiles as the value of the die on that tile
                                 var movement = {d: direction};
-                                destination = CHASE.AI.Position.getDestinationIndexIfValidMove(i, movement, Math.abs(position.tiles[i]), false);
+                                destination = CHASE.AI.Position.getDestinationIndexIfValidMove(position, i, movement, Math.abs(position.tiles[i]), false);
 
                                 if (destination != -1)
                                 {
@@ -203,7 +412,7 @@ CHASE.AI = {
                                 // Find point distribution moves
                                 if (position.tiles[i] > 1 || position.tiles[i] < -1)
                                 {
-                                    destination = CHASE.AI.Position.getDestinationIndexIfValidMove(i, movement, 1, false);
+                                    destination = CHASE.AI.Position.getDestinationIndexIfValidMove(position, i, movement, 1, false);
 
                                     if (destination != -1)
                                     {
@@ -254,8 +463,15 @@ CHASE.AI = {
             return count;
         },
 		
+		// Make a move on the main board
+        makeMove: function(move)
+        {
+			CHASE.AI.Position.makeMoveInternal(CHASE.AI.Board, move, true, -1);
+			CHASE.AI.LastMove = move;
+		},
+		
 		// Make a move on a board
-        makeMove: function(position, move, firstLevel, basePieceCount)
+        makeMoveInternal: function(position, move, firstLevel, basePieceCount)
         {
             var opponent = position.playerToMove == CHASE.AI.Player.Blue ? CHASE.AI.Player.Red : CHASE.AI.Player.Blue;
 
@@ -296,7 +512,7 @@ CHASE.AI = {
                 {
                     // Figure out what move needs to be made to move the bumbed piece
                     var direction = {d: move.finalDirection};
-                    var targetIndex = CHASE.AI.Position.getDestinationIndexIfValidMove(move.toIndex, direction, 1, true);
+                    var targetIndex = CHASE.AI.Position.getDestinationIndexIfValidMove(position, move.toIndex, direction, 1, true);
                     var bumpMove = 
                     {
                         fromIndex: move.toIndex,
@@ -306,7 +522,7 @@ CHASE.AI = {
                     };
 
                     // Recursively make the bump move(s)
-                    CHASE.AI.Position.makeMove(position, bumpMove, false, basePieceCount);
+                    CHASE.AI.Position.makeMoveInternal(position, bumpMove, false, basePieceCount);
                 }
 
                 // Are we capturing an enemy piece?
@@ -385,7 +601,7 @@ CHASE.AI = {
                         increment: 0,
                         finalDirection: leftDirection
                     };
-                    CHASE.AI.Position.makeMove(position, leftMove, false, basePieceCount);
+                    CHASE.AI.Position.makeMoveInternal(position, leftMove, false, basePieceCount);
                     if (rightValue > 0)
                     {
                         position.tiles[40] = sourcePiece > 0 ? rightValue : -rightValue;
@@ -396,7 +612,7 @@ CHASE.AI = {
                             increment: 0,
                             finalDirection: rightDirection
                         };
-                        CHASE.AI.Position.makeMove(position, rightMove, false, basePieceCount);
+                        CHASE.AI.Position.makeMoveInternal(position, rightMove, false, basePieceCount);
                     }
                 }
 

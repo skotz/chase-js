@@ -75,7 +75,7 @@ CHASE.UI = {
 						// Look for valid moves with the given source and target square
 						for (var i = 0; i < moves.length; i++) {
 							if (moves[i].fromIndex == CHASE.UI.selectedFromIndex && moves[i].toIndex == CHASE.UI.selectedToIndex) {
-								CHASE.AI.Position.makeMove(CHASE.AI.Board, moves[i], true, -1);							
+								CHASE.AI.Position.makeMove(moves[i]);							
 								CHASE.UI.selectedFromIndex = -1;
 								CHASE.UI.selectedToIndex = -1;
 								break;
@@ -97,7 +97,7 @@ CHASE.UI = {
 				if (CHASE.AI.Board.pointsToDistribute > 0) {
 					for (var i = 0; i < moves.length; i++) {
 						if (moves[i].toIndex == index) {
-							CHASE.AI.Position.makeMove(CHASE.AI.Board, moves[i], true, -1);							
+							CHASE.AI.Position.makeMove(moves[i]);							
 							CHASE.UI.selectedFromIndex = -1;
 							CHASE.UI.selectedToIndex = -1;
 							break;
@@ -122,7 +122,7 @@ CHASE.UI = {
 				for (var i = 0; i < moves.length; i++) {
 					if (moves[i].fromIndex == CHASE.UI.selectedFromIndex && moves[i].toIndex == CHASE.UI.selectedToIndex && moves[i].increment == increment) {
 						$(".hex-menu").fadeOut();
-						CHASE.AI.Position.makeMove(CHASE.AI.Board, moves[i], true, -1);							
+						CHASE.AI.Position.makeMove(moves[i]);							
 						CHASE.UI.selectedFromIndex = -1;
 						CHASE.UI.selectedToIndex = -1;
 						break;
@@ -133,6 +133,13 @@ CHASE.UI = {
 			CHASE.UI.refresh();
 		});
 		
+		CHASE.UI.refresh();
+	},
+	
+	// Force the computer to make a move
+	makeBestMove: function() {
+		var move = CHASE.AI.Search.getBestMove(CHASE.AI.Board, 2);
+		CHASE.AI.Position.makeMove(move.bestMove);
 		CHASE.UI.refresh();
 	},
 	
@@ -178,6 +185,17 @@ CHASE.UI = {
 			}
 		}
 
+		// Highlight last move tiles
+		$(".hex").removeClass("last-move");
+		if (CHASE.AI.LastMove != null) {
+			if (CHASE.AI.LastMove.fromIndex >= 0) {
+				$("#tile" + CHASE.AI.LastMove.fromIndex).addClass("last-move");
+			}
+			if (CHASE.AI.LastMove.toIndex >= 0) {
+				$("#tile" + CHASE.AI.LastMove.toIndex).addClass("last-move");
+			}
+		}
+		
 		// Highlight tiles we can add points to after a capture
 		if (CHASE.AI.Board.pointsToDistribute > 0) {
 			var moves = CHASE.AI.Position.getValidMoves(CHASE.AI.Board);
@@ -188,6 +206,19 @@ CHASE.UI = {
 					$pointsTile.addClass("option");
 				}
 			}
+		}
+		
+		// See if there's a winner
+		var winner = CHASE.AI.Position.getWinner(CHASE.AI.Board);
+		if (winner == CHASE.AI.Player.Blue) {
+			alert("Blue Wins!");
+		} else if (winner == CHASE.AI.Player.Red) {
+			alert("Red Wins!");
+		}
+		
+		// Have the computer make a move
+		if (CHASE.AI.Board.playerToMove == CHASE.AI.Player.Blue) {
+			CHASE.UI.makeBestMove();
 		}
 	},
 	

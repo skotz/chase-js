@@ -5,7 +5,6 @@ window.CHASE = window.CHASE || { };
 CHASE.UI = {
 	selectedFromIndex: -1,
 	selectedToIndex: -1,
-	searchDepth: 2,
 	
 	// Generate the HTML for the board upon first load
 	init: function($container) {
@@ -25,6 +24,42 @@ CHASE.UI = {
 		
 		// Add the game over background
 		$container.append("<div class=\"game-over\"></div>");
+		
+		// Add the new game menu and options
+		$container.append("<div class=\"new-game\"></div>");
+		var $newGameMenu = $container.children(".new-game");
+		$newGameMenu.append("<span class=\"title\">Chase</span><span class=\"subtitle\">(the game)</span>");
+		$newGameMenu.append("<div id=\"optSearchDepth\" class=\"option\">Engine Level" + 
+				"<div class=\"choice\" data-option=\"3\">3</div>" + 
+				"<div class=\"choice selected\" data-option=\"2\">2</div>" + 
+				"<div class=\"choice\" data-option=\"1\">1</div>" + 
+			"</div>");
+		$newGameMenu.append("<div id=\"optShowThreats\" class=\"option\">Highlight Threats" + 
+				"<div class=\"choice\" data-option=\"off\">Off</div>" + 
+				"<div class=\"choice selected\" data-option=\"on\">On</div>" + 
+			"</div>");
+		$newGameMenu.append("<div id=\"optShowMoves\" class=\"option\">Highlight Moves" + 
+				"<div class=\"choice\" data-option=\"off\">Off</div>" + 
+				"<div class=\"choice selected\" data-option=\"on\">On</div>" + 
+			"</div>");
+		$newGameMenu.append("<div class=\"option\"><a href=\"javascript: void(0)\" id=\"startGame\">Start Game</a></div>");
+			
+		// Initialize click events for menu options
+		$container.on("click", ".option .choice", function() {
+			var $choice = $(this);
+			var $option = $choice.parent();
+			
+			$option.children().removeClass("selected");
+			$choice.addClass("selected");
+		});
+		$container.on("click", "#startGame", function() {
+			CHASE.AI.NewGame();
+			$(".new-game").hide();
+		});
+		$container.on("click", ".restartGame", function() {
+			$(".new-game").show();
+			$(".game-over").hide();
+		});
 		
 		// Generate the markup for the point transfer menu
 		$board.append("<div class=\"hex-menu\"></div>");
@@ -149,7 +184,8 @@ CHASE.UI = {
 	
 	// Force the computer to make a move
 	makeBestMove: function() {
-		var move = CHASE.AI.Search.getBestMove(CHASE.AI.Board, CHASE.UI.searchDepth);
+		var searchDepth = $("#optSearchDepth").children(".choice.selected").data("option");
+		var move = CHASE.AI.Search.getBestMove(CHASE.AI.Board, searchDepth);
 		CHASE.AI.Position.makeMove(move.bestMove);
 		CHASE.UI.refresh();
 	},
@@ -188,11 +224,13 @@ CHASE.UI = {
 			$tile.addClass("selected");
 			
 			// Highlight all valid moves for the selected tile
-			var moves = CHASE.AI.Position.getValidMoves(CHASE.AI.Board);
-			for (var i = 0; i < moves.length; i++) {
-				if (moves[i].fromIndex == CHASE.UI.selectedFromIndex) {			
-					var $destTile = $("#tile" + moves[i].toIndex);
-					$destTile.addClass("option");
+			if ($("#optShowMoves").children(".choice.selected").data("option") == "on") {
+				var moves = CHASE.AI.Position.getValidMoves(CHASE.AI.Board);
+				for (var i = 0; i < moves.length; i++) {
+					if (moves[i].fromIndex == CHASE.UI.selectedFromIndex) {			
+						var $destTile = $("#tile" + moves[i].toIndex);
+						$destTile.addClass("option");
+					}
 				}
 			}
 		}
@@ -221,10 +259,12 @@ CHASE.UI = {
 		}
 		
 		// Highlight threatened pieces
-		$(".hex").removeClass("threatened");
-		var threats = CHASE.AI.Position.getThreatenedPieces(CHASE.AI.Board);
-		for (var i = 0; i < threats.length; i++) {
-			$("#tile" + threats[i]).addClass("threatened");
+		if ($("#optShowThreats").children(".choice.selected").data("option") == "on") {
+			$(".hex").removeClass("threatened");
+			var threats = CHASE.AI.Position.getThreatenedPieces(CHASE.AI.Board);
+			for (var i = 0; i < threats.length; i++) {
+				$("#tile" + threats[i]).addClass("threatened");
+			}
 		}
 		
 		// See if there's a winner

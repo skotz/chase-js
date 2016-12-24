@@ -228,12 +228,11 @@ CHASE.UI = {
 		}
 		
 		// See if there's a winner
-		$(".game-over").removeClass("blue-wins");
-		$(".game-over").removeClass("red-wins");
+		$(".game-over").hide().removeClass("blue-wins").removeClass("red-wins").text("");
 		if (winner == CHASE.AI.Player.Blue) {
-			$(".game-over").addClass("blue-wins");
+			$(".game-over").show().addClass("blue-wins").text("Blue Wins!");
 		} else if (winner == CHASE.AI.Player.Red) {
-			$(".game-over").addClass("red-wins");
+			$(".game-over").show().addClass("red-wins").text("Red Wins!");
 		}
 		
 		// Have the computer make a move

@@ -29,10 +29,10 @@ CHASE.UI = {
 		$container.append("<div class=\"new-game\"></div>");
 		var $newGameMenu = $container.children(".new-game");
 		$newGameMenu.append("<span class=\"title\">Chase</span><span class=\"subtitle\">(the game)</span>");
-		$newGameMenu.append("<div id=\"optSearchDepth\" class=\"option\">Engine Level" + 
-				"<div class=\"choice\" data-option=\"3\">3</div>" + 
-				"<div class=\"choice selected\" data-option=\"2\">2</div>" + 
-				"<div class=\"choice\" data-option=\"1\">1</div>" + 
+		$newGameMenu.append("<div id=\"optSearchDepth\" class=\"option\">Difficulty Level" + 
+				"<div class=\"choice\" data-option=\"3\">Hard</div>" + 
+				"<div class=\"choice selected\" data-option=\"2\">Medium</div>" + 
+				"<div class=\"choice\" data-option=\"1\">Easy</div>" + 
 			"</div>");
 		$newGameMenu.append("<div id=\"optShowThreats\" class=\"option\">Highlight Threats" + 
 				"<div class=\"choice\" data-option=\"off\">Off</div>" + 

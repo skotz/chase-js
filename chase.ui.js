@@ -302,6 +302,29 @@ CHASE.UI = {
 	}
 };
 
+CHASE.X = {
+    selfPlay: function () {
+        CHASE.AI.NewGame();
+        $(".new-game").hide();
+        var move = {};
+        var nextMove = function() {
+            if (CHASE.AI.Position.playerToMove == CHASE.AI.Player.Red) {
+                move = CHASE.AI.Search.getBestMoveMcts(CHASE.AI.Board, 5);
+            } else {
+                move = CHASE.AI.Search.getBestMove(CHASE.AI.Board, 3);
+            }
+            CHASE.AI.Position.makeMove(move.bestMove);
+            CHASE.UI.refresh();
+            
+            if (move != null && CHASE.AI.Position.getWinner(CHASE.AI.Board) == 0)
+            {
+                setTimeout(nextMove, 250);
+            }
+        };
+        nextMove();
+    }
+};
+
 /*$(document).ready(function() {
 	function doResize() {
 	  var scale = Math.min(

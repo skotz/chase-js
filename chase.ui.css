@@ -403,6 +403,9 @@ body
 	text-transform: uppercase;
 }
 
+.new-game #optEngine.option .choice {
+    width: 150px;
+}
 
 .new-game .option .choice:first-of-type
 {

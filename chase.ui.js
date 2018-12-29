@@ -29,6 +29,10 @@ CHASE.UI = {
 		$container.append("<div class=\"new-game\"></div>");
 		var $newGameMenu = $container.children(".new-game");
 		$newGameMenu.append("<span class=\"title\">Chase</span><span class=\"subtitle\">(the game)</span>");
+		$newGameMenu.append("<div id=\"optEngine\" class=\"option\">Engine Type" + 
+				"<div class=\"choice selected\" data-option=\"mcts\">MCTS</div>" + 
+				"<div class=\"choice\" data-option=\"minimax\">MiniMax</div>" + 
+			"</div>");
 		$newGameMenu.append("<div id=\"optSearchDepth\" class=\"option\">Engine Level" + 
 				"<div class=\"choice\" data-option=\"3\">3</div>" + 
 				"<div class=\"choice selected\" data-option=\"2\">2</div>" + 
@@ -184,8 +188,17 @@ CHASE.UI = {
 	
 	// Force the computer to make a move
 	makeBestMove: function() {
+		var engine = $("#optEngine").children(".choice.selected").data("option");
 		var searchDepth = $("#optSearchDepth").children(".choice.selected").data("option");
-		var move = CHASE.AI.Search.getBestMove(CHASE.AI.Board, searchDepth);
+		var move;
+        if (engine == "mcts")
+        {
+            move = CHASE.AI.Search.getBestMoveMcts(CHASE.AI.Board, searchDepth);
+        }
+        else
+        {
+            move = CHASE.AI.Search.getBestMove(CHASE.AI.Board, searchDepth);
+        }
 		CHASE.AI.Position.makeMove(move.bestMove);
 		CHASE.UI.refresh();
 	},

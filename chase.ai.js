@@ -120,7 +120,7 @@ CHASE.AI = {
             }
         },
 		
-		// Find the best move in a given position
+		// Find the best move in a given position using MiniMax
 		getBestMove: function(position, depth) 
 		{
 			CHASE.AI.Search.evaluations = 0;
@@ -128,6 +128,120 @@ CHASE.AI = {
 			return CHASE.AI.Search.alphaBeta(position, -10000000, 10000000, depth * 2, 1, position.playerToMove);
 		},
 		
+		// Find the best move in a given position using MCTS
+		getBestMoveMcts: function(position, seconds) 
+		{
+			CHASE.AI.Search.evaluations = 0;
+			CHASE.AI.Search.startTime = +new Date();
+            return CHASE.AI.Search.mcts(position, seconds);
+		},
+		
+        // Monte Carlo Tree Search
+        mcts: function(rootState, maxSeconds)
+        {
+            if (CHASE.AI.Position.getWinner(rootState) != 0)
+            {
+                return {
+                    bestMove: null,
+                    score: 0
+                };
+            }
+            
+            var createNode = function (state, move, parent)
+            {
+                return {
+                    move: move,
+                    parent: parent,
+                    children: [],
+                    wins: 0,
+                    visits: 0,
+                    untried: state != null ? CHASE.AI.Position.getValidMoves(state) : [],
+                    lastToMove: state.lastToMove
+                };
+            };
+            var random = function (max) 
+            {
+                return Math.floor(Math.random() * Math.floor(max));
+            };
+            
+            var reportInterval = +new Date();            
+            var rootNode = createNode(rootState);
+
+            while ((+new Date() - CHASE.AI.Search.startTime) < maxSeconds * 1000)
+            {
+                var node = rootNode;
+                var state = CHASE.AI.Position.clone(rootState);
+                CHASE.AI.Search.evaluations++;
+
+                // Select
+                while (node.untried.length == 0 && node.children.length > 0)
+                {
+                    var selected = null;
+                    var bestValue = -100000000;
+                    for (var i = 0; i < node.children.length; i++)
+                    {
+                        var value = node.children[i].wins / node.children[i].visits + Math.sqrt(2 * Math.log(node.visits) / node.children[i].visits);
+                        if (value > bestValue)
+                        {
+                            selected = node.children[i];
+                            bestValue = value;
+                        }
+                    }
+                    node = selected;
+                    CHASE.AI.Position.makeMoveInternal(state, node.move, true, -1);
+                }
+                
+                // Expand
+                if (node.untried.length > 0)
+                {
+                    var move = node.untried[random(node.untried.length)];
+                    CHASE.AI.Position.makeMoveInternal(state, move, true, -1);
+                    
+                    var newNode = createNode(state, move, node);
+                    node.untried.splice(node.untried.indexOf(move), 1);
+                    node.children.push(newNode);
+                    node = newNode;
+                }
+
+                // Simulate
+                while (CHASE.AI.Position.getWinner(state) == 0)
+                {
+                    var moves = CHASE.AI.Position.getValidMoves(state);
+                    CHASE.AI.Position.makeMoveInternal(state, moves[random(moves.length)], true, -1);
+                }
+
+                // Backpropagate
+                while (node != null)
+                {
+                    node.visits++;
+                    node.wins += CHASE.AI.Position.getWinner(state) == node.lastToMove ? 1 : 0;
+                    node = node.parent;
+                }
+
+                // Update Status
+				var timeNow = +new Date();
+				var reportSeconds = (timeNow - reportInterval) / 1000;
+                if (reportSeconds > 0.25)
+                {
+                    reportInterval = +new Date();
+                    var totalSeconds = (timeNow - CHASE.AI.Search.startTime) / 1000;
+                    var nps = Math.round(CHASE.AI.Search.evaluations / totalSeconds);
+                    var children = rootNode.children;
+                    children.sort(function (a, b) { return a.visits - b.visits });
+                    var best = children[children.length - 1];
+                    
+					console.log("nps: " + nps + " score: " + (200 * best.wins / best.visits - 100) + " (" + best.wins + "/" + best.visits + ")");
+                }
+            }
+
+            rootNode.children.sort(function (a, b) { return a.visits - b.visits });
+                    
+            return {
+                bestMove: rootNode.children[rootNode.children.length - 1].move,
+                score: 200 * best.wins / best.visits - 100
+            };
+        },
+        
 		// Mini-Max with Alpha-Beta pruning
 		alphaBeta: function(position, alpha, beta, depth, depthUp, initiatingPlayer)
         {
@@ -250,7 +364,8 @@ CHASE.AI = {
 					 -1, -2, -3, -4, -5, -4, -3, -2, -1  // a
 				],
 				pointsToDistribute: 0,
-				playerToMove: -1
+				playerToMove: -1,
+                lastToMove: 1
 			};
 		},
 		
@@ -259,7 +374,8 @@ CHASE.AI = {
 			return {
 				tiles: position.tiles.slice(0),
 				pointsToDistribute: position.pointsToDistribute,
-				playerToMove: position.playerToMove
+				playerToMove: position.playerToMove,
+                lastToMove: position.lastToMove
 			};
 		},
 		
@@ -387,6 +503,11 @@ CHASE.AI = {
             var moves = [];
             var destination;
 
+            if (CHASE.AI.Position.getWinner(position) != 0)
+            {
+                return moves;
+            }
+            
             // We must first distribute points if a piece was just captured
             if (position.pointsToDistribute > 0)
             {
@@ -524,6 +645,11 @@ CHASE.AI = {
 		// Make a move on the main board
         makeMove: function(move)
         {
+            if (move == null)
+            {
+                return;
+            }
+            
 			CHASE.AI.Position.makeMoveInternal(CHASE.AI.Board, move, true, -1);
 			
 			// Record the last move (that wasn't a point distribution after a capture)
@@ -535,6 +661,11 @@ CHASE.AI = {
 		// Make a move on a board
         makeMoveInternal: function(position, move, firstLevel, basePieceCount)
         {
+            if (move == null)
+            {
+                return;
+            }
+            
             var opponent = position.playerToMove == CHASE.AI.Player.Blue ? CHASE.AI.Player.Red : CHASE.AI.Player.Blue;
 
             if (move.increment > 0)
@@ -686,7 +817,9 @@ CHASE.AI = {
             }
 
             // It's now the other player's turn to move
+            position.lastToMove = position.playerToMove;
             position.playerToMove = opponent;
+            
             // MovesHistory = string.IsNullOrEmpty(MovesHistory) ? move.ToString() : MovesHistory + " " + move.ToString(); // TODO
 
 			// TODO

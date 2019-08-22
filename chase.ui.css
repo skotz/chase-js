@@ -8,6 +8,11 @@ Scott Clayton (c) 2016
 	padding: 0;
 }
 
+#chase {
+	width: 800px;
+	height: 800px;
+}
+
 body 
 {
 	background-color: #AAA;

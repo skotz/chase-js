@@ -1,5 +1,8 @@
-// Chase
-// Scott Clayton (c) 2016
+/* 
+ * Chase (the game)
+ * Scott Clayton (c) 2016
+ */
+
 window.CHASE = window.CHASE || { };
 CHASE.AI = {
 	// The currently running game

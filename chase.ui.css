@@ -10,7 +10,8 @@ Scott Clayton (c) 2016
 
 #chase {
 	width: 800px;
-	height: 800px;
+	height: 500px;
+	margin: 0 auto;
 }
 
 body 

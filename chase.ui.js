@@ -17,11 +17,18 @@ var settings = {
 	/* Colors */
 	colorEmpty: 0x777777,
 	colorRed: 0xFF3333,
+	colorRedSelected: 0xAA0000,
 	colorBlue: 0x4499FF,
-	hexTexture: function(points, color) {
+	colorBlueSelected: 0x1166AA,
+	colorPossibleMove: 0x773399,
+	hexTexture: function(points, color, drawOutline, outlinePoints, outlineColor) {
 		const graphics = new PIXI.Graphics();
-		graphics.beginFill(color);
 		graphics.lineStyle(0);
+		if (drawOutline) {
+			graphics.beginFill(outlineColor);
+			graphics.drawPolygon(outlinePoints);
+		}
+		graphics.beginFill(color);
 		graphics.drawPolygon(points);
 		graphics.endFill();
 		var texture = PIXI.RenderTexture.create(graphics.width, graphics.height);
@@ -30,10 +37,15 @@ var settings = {
 	}
 };
 
+var ui = {
+	selectedFromIndex: -1,
+	selectedToIndex: -1,
+	showValidMoves: true
+};
+
 // Initialize app
 var app = new PIXI.Application({ 
     autoResize: true,
-    resolution: devicePixelRatio,
     backgroundColor: 0xEEEEEE,
     antialias: true,
     resolution: 2
@@ -67,6 +79,16 @@ var createHex = function (hex) {
 		settings.hexWidth, settings.hexWidth * pointFactTop,
 		settings.hexWidth / 2.0, 0
 	];
+	var outlineExtraSize = 10;
+	var outlineWidth = settings.hexWidth + outlineExtraSize;
+	const outline = [
+		0, outlineWidth * pointFactTop,
+		0, outlineWidth * pointFactMid,
+		outlineWidth / 2.0, outlineWidth * pointFactBottom,
+		outlineWidth, outlineWidth * pointFactMid,
+		outlineWidth, outlineWidth * pointFactTop,
+		outlineWidth / 2.0, 0
+	];
 
     const texture = settings.hexTexture(points, settings.colorEmpty);
 
@@ -82,11 +104,91 @@ var createHex = function (hex) {
     };
     sprite.pointerout = function () {
 		this.alpha = 1.0;
-    };
+	};
+	sprite.click = function () {		
+		var index = hex.id;	
+		/* $(".hex-menu").fadeOut();*/
+		
+		// Don't allow moves after the game is over
+		if (CHASE.AI.Position.getWinner(CHASE.AI.Board) != 0) {
+			ui.selectedFromIndex = -1;
+			ui.selectedToIndex = -1;
+			return;
+		}
+		
+		if (ui.selectedFromIndex >= 0) {
+			if (ui.selectedFromIndex == index) {
+				// Unselect an already selected tile
+				ui.selectedFromIndex = -1;
+			} else {
+				ui.selectedToIndex = index;
+				
+				var moves = CHASE.AI.Position.getValidMoves(CHASE.AI.Board);
+				
+				// Look for moves that transfer a piece value
+				var transfers = [];
+				for (var i = 0; i < moves.length; i++) {
+					if (moves[i].fromIndex == ui.selectedFromIndex && moves[i].toIndex == ui.selectedToIndex && moves[i].increment > 0) {
+						transfers.push(moves[i].increment);
+					}
+				}
+				
+				if (transfers.length > 0) {
+					// Initialize all the valid point transfer options
+					/* $("#menu1, #menu2, #menu3, #menu4, #menu5").addClass("disabled-menu");
+					for (var i = 0; i < transfers.length; i++) {
+						$("#menu" + transfers[i]).removeClass("disabled-menu");
+					}
+					
+					// Show the menu
+					$(".hex-menu").css("left", $tile.position().left + $tile.width() / 2 - $(".hex-menu").width());
+					$(".hex-menu").css("top", $tile.position().top + $tile.height() / 2 - $(".hex-menu").height() + 28.867515);
+					$(".hex-menu").fadeIn();*/
+				}
+				else {
+					// Look for valid moves with the given source and target square
+					for (var i = 0; i < moves.length; i++) {
+						if (moves[i].fromIndex == ui.selectedFromIndex && moves[i].toIndex == ui.selectedToIndex) {
+							CHASE.AI.Position.makeMove(moves[i]);
+							ui.selectedFromIndex = -1;
+							ui.selectedToIndex = -1;
+							break;
+						}
+					}
+				}
+			}
+		} else {
+			// If there's a valid move from this tile
+			var moves = CHASE.AI.Position.getValidMoves(CHASE.AI.Board);
+			for (var i = 0; i < moves.length; i++) {
+				if (moves[i].fromIndex == index) {					
+					ui.selectedFromIndex = index;
+					break;
+				}
+			}
+			
+			// If we need to distribute points after a capture
+			if (CHASE.AI.Board.pointsToDistribute > 0) {
+				for (var i = 0; i < moves.length; i++) {
+					if (moves[i].toIndex == index) {
+						CHASE.AI.Position.makeMove(moves[i]);							
+						ui.selectedFromIndex = -1;
+						ui.selectedToIndex = -1;
+						break;
+					}
+				}
+			}
+		}
+		
+		/*ui.refresh();*/
+		
+		console.log("Clicked Hex #" + index);
+	}
     
     return {
 		color: settings.colorEmpty,
 		points: points,
+		outline: outline,
 		sprite: sprite
 	};
 }
@@ -138,6 +240,7 @@ app.ticker.add((delta) => {
 	for (var i = 0; i < 81; i++) {
 		if (i != 40) {
 			var value = position.tiles[i] != 0 ? Math.abs(position.tiles[i]) : "";
+			// Changes in ownership
 			if (position.tiles[i] > 0) {
 				if (hexTiles[i].color != settings.colorBlue) {
 					hexTiles[i].color = settings.colorBlue;
@@ -151,6 +254,27 @@ app.ticker.add((delta) => {
 			} else if (hexTiles[i].color != settings.colorEmpty) {
 				hexTiles[i].color = settings.colorEmpty;
 				hexTiles[i].sprite.texture = settings.hexTexture(hexTiles[i].points, settings.colorEmpty);
+			}
+			// Selected tiles
+			if (i == ui.selectedFromIndex) {
+				if (hexTiles[i].color == settings.colorBlue) {
+					hexTiles[i].color = settings.colorBlueSelected;
+					hexTiles[i].sprite.texture = settings.hexTexture(hexTiles[i].points, settings.colorBlueSelected);
+				} else if (hexTiles[i].color == settings.colorRed) {
+					hexTiles[i].color = settings.colorRedSelected;
+					hexTiles[i].sprite.texture = settings.hexTexture(hexTiles[i].points, settings.colorRedSelected);
+				}
+			}
+		}
+	}
+	// Possible moves
+	if (ui.showValidMoves && ui.selectedFromIndex >= 0) {
+		var moves = CHASE.AI.Position.getValidMoves(CHASE.AI.Board);
+		for (var i = 0; i < moves.length; i++) {
+			if (moves[i].fromIndex == ui.selectedFromIndex) {
+				var move = moves[i].toIndex;
+				hexTiles[move].sprite.texture = 
+					settings.hexTexture(hexTiles[move].points, hexTiles[move].color, true, hexTiles[move].outline, settings.colorPossibleMove);
 			}
 		}
 	}

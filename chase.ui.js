@@ -321,7 +321,7 @@ function resize() {
 	// const newWidthBasedOnHeight = (2 * Math.sqrt(3) * parent.clientHeight - (4 * Math.sqrt(3) + 24) * settings.hexSpace) / 30.0;
 	const newWidthBasedOnHeight = ((12 + 2 * Math.sqrt(3)) * settings.hexSpace - Math.sqrt(3) * parent.clientHeight) / -14.0;
 
-	// Resise to whatever fits best
+	// Resize to whatever fits best
 	settings.hexWidth = Math.min(newWidthBasedOnWidth, newWidthBasedOnHeight);
 
 	if (menu) {

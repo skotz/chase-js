@@ -1,4 +1,10 @@
-# chase-js
-JavaScript port of my C# Chase engine
+# Chase (the game)
 
-https://skotz.github.io/chase-js
+## Play Online
+
+[PixiJS version](https://skotz.github.io/chase-js)
+[jQuery version](https://skotz.github.io/chase-js/index.jquery.html)
+
+## Download
+
+[C# version](https://github.com/skotz/chase-ai)

@@ -8,16 +8,9 @@ Scott Clayton (c) 2016
 	padding: 0;
 }
 
-#chase {
-	width: 100vw;
-	height: 100vh;
-	margin: 0 auto;
-}
-
 body 
 {
-	overflow: hidden;
-	background-color: #EEEEEE;
+	background-color: #AAA;
 }
 
 .hex

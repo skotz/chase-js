@@ -46,7 +46,8 @@ var ui = {
 	validTransfers: [],
 	showValidMoves: true,
 	showThreats: true,
-	difficulty: 1
+	difficulty: 1,
+	validMoves: []
 };
 
 // Initialize app
@@ -229,13 +230,21 @@ var clearStage = function () {
 var hexTiles = [];
 var displayBoard = function () {
 	clearStage();
+	ui.validMoves = CHASE.AI.Position.getValidMoves(CHASE.AI.Board);
 	// Create the hex grid
 	for (var i = 0; i < 81; i++) {
 		var hex = createHex({ id: i });
 		hexTiles.push(hex);
 		app.stage.addChild(hex.sprite);
 		if (CHASE.AI.Board.tiles[i] != 0) {
-			displayText(Math.abs(CHASE.AI.Board.tiles[i]), hex.center);
+			var addon = "";
+			for (let v = 0; v < ui.validMoves.length; v++) {
+				if (ui.validMoves[v].increment > 0 && ui.validMoves[v].fromIndex == -1 && ui.validMoves[v].toIndex == i) {
+					// Required increment after capture
+					addon = " + " + ui.validMoves[v].increment;
+				}
+			}
+			displayText(Math.abs(CHASE.AI.Board.tiles[i]) + addon, hex.center);
 		} else if (i == 40) {
 			displayText("CH", hex.center);
 		}
@@ -331,10 +340,11 @@ function startGame() {
 }
 
 function computerMove() {
-	// TODO: async?
-	var move = CHASE.AI.Search.getBestMoveMcts(CHASE.AI.Board, ui.difficulty);
-	CHASE.AI.Position.makeMove(move.bestMove);
-	displayBoard();
+	setTimeout(function () {
+		var move = CHASE.AI.Search.getBestMoveMcts(CHASE.AI.Board, ui.difficulty);
+		CHASE.AI.Position.makeMove(move.bestMove);
+		displayBoard();
+	}, 1);
 }
 
 startGame();
@@ -418,10 +428,17 @@ app.ticker.add((delta) => {
 			}
 		}
 		// Possible moves
-		if (ui.showValidMoves && ui.selectedFromIndex >= 0) {
-			var moves = CHASE.AI.Position.getValidMoves(CHASE.AI.Board);
+		if (ui.showValidMoves) {
+			var moves = ui.validMoves;
 			for (var i = 0; i < moves.length; i++) {
-				if (moves[i].fromIndex == ui.selectedFromIndex) {
+				if (ui.selectedFromIndex >= 0) {
+					if (moves[i].fromIndex == ui.selectedFromIndex) {
+						var move = moves[i].toIndex;
+						hexTiles[move].sprite.texture =
+							settings.hexTexture(hexTiles[move].points, hexTiles[move].color, true, hexTiles[move].outline, settings.colorPossibleMove);
+					}
+				} else if (moves[i].increment > 0 && moves[i].fromIndex == -1) {
+					// Required transfer after capture moves
 					var move = moves[i].toIndex;
 					hexTiles[move].sprite.texture =
 						settings.hexTexture(hexTiles[move].points, hexTiles[move].color, true, hexTiles[move].outline, settings.colorPossibleMove);

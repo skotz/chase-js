@@ -47,7 +47,8 @@ var ui = {
 	showValidMoves: true,
 	showThreats: true,
 	difficulty: 1,
-	validMoves: []
+	validMoves: [],
+	leftPadding: 0
 };
 
 // Initialize app
@@ -67,6 +68,9 @@ var createHex = function (hex) {
 
 	var x = settings.hexSpace + (settings.hexSpace + settings.hexWidth) * columnIndex;
 	var y = settings.rowOffset() * rowIndex + settings.hexSpace;
+
+	// Center the board on the canvas
+	x += ui.leftPadding;
 
 	if (rowIndex % 2 == 0) {
 		// Inset rows
@@ -254,14 +258,22 @@ var displayBoard = function () {
 var displayText = function (text, location) {
 	const style = new PIXI.TextStyle({
 		fontFamily: 'Arial',
-		fontSize: 14,
+		fontSize: 96,
 		fontWeight: 'bold'
 	});
-	const basicText = new PIXI.Text(text, style);
-	basicText.x = location.x;
-	basicText.y = location.y;
-	basicText.anchor.set(0.5, 0.5);
-	app.stage.addChild(basicText);
+	const txt = new PIXI.Text(text, style);
+	txt.x = location.x;
+	txt.y = location.y;
+	if (text.length == 1) {
+		txt.width = settings.hexWidth / 3.0;
+	} else if (text.length == 2) {
+		txt.width = settings.hexWidth / 2.0;
+	} else {
+		txt.width = settings.hexWidth - settings.hexSpace * 2.0;
+	}
+	txt.height = settings.hexHeight() / 3.0;
+	txt.anchor.set(0.5, 0.5);
+	app.stage.addChild(txt);
 }
 
 var displayMenuOption = function (id, text, action) {
@@ -300,7 +312,7 @@ var displayMenu = function () {
 var transferTiles = [32, 41, 50, 49, 39, 31];
 var transferMenu = false;
 var displayTransferMenu = function (transfers) {
-	displayBoard();
+	clearStage();
 	for (let i = 0; i < transferTiles.length - 1; i++) {
 		displayMenuOption(transferTiles[i], "+" + (i + 1), null);
 	}
@@ -323,6 +335,10 @@ function resize() {
 
 	// Resize to whatever fits best
 	settings.hexWidth = Math.min(newWidthBasedOnWidth, newWidthBasedOnHeight);
+
+	// Figure out the extra horizontal spacing to center the board in the canvas
+	const necessaryWidth = settings.hexWidth * 9.5 + 10.5 * settings.hexSpace;
+	ui.leftPadding = (parent.clientWidth - necessaryWidth) / 2.0;
 
 	if (menu) {
 		displayMenu();
@@ -390,7 +406,7 @@ app.ticker.add((delta) => {
 		}
 	} else if (transferMenu) {
 		// Display the overlay piece value transfer menu
-		for (var i = 81; i < hexTiles.length; i++) {
+		for (var i = 0; i < hexTiles.length; i++) {
 			for (let t = 0; t < transferTiles.length; t++) {
 				if (hexTiles[i].id == transferTiles[t]) {
 					if (transferTiles.indexOf(hexTiles[i].id) + 1 <= ui.validTransfers.length) {

@@ -19,19 +19,19 @@ var settings = {
 	colorRed: 0xFF5858,
 	colorRedSelected: 0xB20000,
 	colorBlue: 0x4786B6,
-	colorBlueSelected: 0x4786B6,
-	colorPossibleMove: 0x074473,
+	colorBlueSelected: 0x074473,
+	colorPossibleMove: 0xFFB858,
 	colorMenu: 0xAAAAAA,
 	colorMenuSelected: 0x4AD64A,// 0x008F00,
 	hexTexture: function (points, color, drawOutline, outlinePoints, outlineColor) {
 		const graphics = new PIXI.Graphics();
 		graphics.lineStyle(0);
+		graphics.beginFill(color);
+		graphics.drawPolygon(points);
 		if (drawOutline) {
 			graphics.beginFill(outlineColor);
 			graphics.drawPolygon(outlinePoints);
 		}
-		graphics.beginFill(color);
-		graphics.drawPolygon(points);
 		graphics.endFill();
 		var texture = PIXI.RenderTexture.create(graphics.width, graphics.height);
 		app.renderer.render(graphics, texture);
@@ -42,6 +42,8 @@ var settings = {
 var ui = {
 	selectedFromIndex: -1,
 	selectedToIndex: -1,
+	selectedTransfer: -1,
+	validTransfers: [],
 	showValidMoves: true,
 	showThreats: true,
 	difficulty: 1
@@ -83,14 +85,16 @@ var createHex = function (hex) {
 		settings.hexWidth / 2.0, 0
 	];
 	var outlineExtraSize = 10;
-	var outlineWidth = settings.hexWidth + outlineExtraSize;
+	var outlineWidth = settings.hexWidth - outlineExtraSize;
+	var extraX = outlineExtraSize / 2.0;
+	var extraY = pointFactBottom * extraX;
 	const outline = [
-		0, outlineWidth * pointFactTop,
-		0, outlineWidth * pointFactMid,
-		outlineWidth / 2.0, outlineWidth * pointFactBottom,
-		outlineWidth, outlineWidth * pointFactMid,
-		outlineWidth, outlineWidth * pointFactTop,
-		outlineWidth / 2.0, 0
+		extraX, extraY + outlineWidth * pointFactTop,
+		extraX, extraY + outlineWidth * pointFactMid,
+		extraX + outlineWidth / 2.0, extraY + outlineWidth * pointFactBottom,
+		extraX + outlineWidth, extraY + outlineWidth * pointFactMid,
+		extraX + outlineWidth, extraY + outlineWidth * pointFactTop,
+		extraX + outlineWidth / 2.0, extraY
 	];
 	const center = {
 		x: x + settings.hexWidth / 2.0,
@@ -127,11 +131,20 @@ var createHex = function (hex) {
 			}
 
 			if (ui.selectedFromIndex >= 0) {
+				if (transferMenu) {
+					ui.selectedTransfer = transferTiles.indexOf(index) + 1;
+					if (ui.selectedTransfer == 6) {
+						// Exit the overlay menu
+						transferMenu = false;
+					}
+				}
 				if (ui.selectedFromIndex == index) {
 					// Unselect an already selected tile
 					ui.selectedFromIndex = -1;
 				} else {
-					ui.selectedToIndex = index;
+					if (!transferMenu) {
+						ui.selectedToIndex = index;
+					}
 
 					var moves = CHASE.AI.Position.getValidMoves(CHASE.AI.Board);
 
@@ -143,25 +156,23 @@ var createHex = function (hex) {
 						}
 					}
 
-					if (transfers.length > 0) {
-						// Initialize all the valid point transfer options
-						/* $("#menu1, #menu2, #menu3, #menu4, #menu5").addClass("disabled-menu");
-						for (var i = 0; i < transfers.length; i++) {
-							$("#menu" + transfers[i]).removeClass("disabled-menu");
-						}
-						
-						// Show the menu
-						$(".hex-menu").css("left", $tile.position().left + $tile.width() / 2 - $(".hex-menu").width());
-						$(".hex-menu").css("top", $tile.position().top + $tile.height() / 2 - $(".hex-menu").height() + 28.867515);
-						$(".hex-menu").fadeIn();*/
-					}
-					else {
+					if (transfers.length > 0 && !transferMenu) {
+						// Transfer points from one tile to another
+						ui.validTransfers = transfers;
+						ui.selectedTransfer = -1;
+						transferMenu = true;
+						displayTransferMenu(transfers);
+					} else {
 						// Look for valid moves with the given source and target square
 						for (var i = 0; i < moves.length; i++) {
-							if (moves[i].fromIndex == ui.selectedFromIndex && moves[i].toIndex == ui.selectedToIndex) {
+							var validIncrement = moves[i].increment <= 0 || moves[i].increment == ui.selectedTransfer;
+							if (moves[i].fromIndex == ui.selectedFromIndex && moves[i].toIndex == ui.selectedToIndex && validIncrement) {
 								CHASE.AI.Position.makeMove(moves[i]);
 								ui.selectedFromIndex = -1;
 								ui.selectedToIndex = -1;
+								ui.selectedTransfer = -1;
+								transferMenu = false;
+								computerMove();
 								break;
 							}
 						}
@@ -190,7 +201,8 @@ var createHex = function (hex) {
 				}
 			}
 
-			/*ui.refresh();*/
+			// Refresh
+			resize();
 
 			console.log("Clicked Hex #" + index);
 		}
@@ -222,6 +234,11 @@ var displayBoard = function () {
 		var hex = createHex({ id: i });
 		hexTiles.push(hex);
 		app.stage.addChild(hex.sprite);
+		if (CHASE.AI.Board.tiles[i] != 0) {
+			displayText(Math.abs(CHASE.AI.Board.tiles[i]), hex.center);
+		} else if (i == 40) {
+			displayText("CH", hex.center);
+		}
 	}
 }
 
@@ -271,6 +288,16 @@ var displayMenu = function () {
 	});
 }
 
+var transferTiles = [32, 41, 50, 49, 39, 31];
+var transferMenu = false;
+var displayTransferMenu = function (transfers) {
+	displayBoard();
+	for (let i = 0; i < transferTiles.length - 1; i++) {
+		displayMenuOption(transferTiles[i], "+" + (i + 1), null);
+	}
+	displayMenuOption(transferTiles[5], "cancel", null);
+}
+
 // Resize app to window size
 function resize() {
 
@@ -290,6 +317,8 @@ function resize() {
 
 	if (menu) {
 		displayMenu();
+	} else if (transferMenu) {
+		displayTransferMenu(ui.validTransfers);
 	} else {
 		displayBoard();
 	}
@@ -299,6 +328,13 @@ window.addEventListener('resize', resize);
 function startGame() {
 	resize();
 	CHASE.AI.NewGame();
+}
+
+function computerMove() {
+	// TODO: async?
+	var move = CHASE.AI.Search.getBestMoveMcts(CHASE.AI.Board, ui.difficulty);
+	CHASE.AI.Position.makeMove(move.bestMove);
+	displayBoard();
 }
 
 startGame();
@@ -342,11 +378,25 @@ app.ticker.add((delta) => {
 				setHexColor(i, settings.colorMenu);
 			}
 		}
+	} else if (transferMenu) {
+		// Display the overlay piece value transfer menu
+		for (var i = 81; i < hexTiles.length; i++) {
+			for (let t = 0; t < transferTiles.length; t++) {
+				if (hexTiles[i].id == transferTiles[t]) {
+					if (transferTiles.indexOf(hexTiles[i].id) + 1 <= ui.validTransfers.length) {
+						setHexColor(i, settings.colorPossibleMove);
+					} else if (t == 5) {
+						setHexColor(i, settings.colorRed);
+					} else {
+						setHexColor(i, settings.colorEmpty);
+					}
+				}
+			}
+		}
 	} else {
 		// Refresh the values of the pieces on the board
 		for (var i = 0; i < 81; i++) {
 			if (i != 40) {
-				var value = position.tiles[i] != 0 ? Math.abs(position.tiles[i]) : "";
 				// Changes in ownership
 				if (position.tiles[i] > 0) {
 					setHexColor(i, settings.colorBlue);

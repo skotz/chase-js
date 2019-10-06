@@ -5,6 +5,7 @@
 
 // Settings
 var settings = {
+	computerPlays: CHASE.AI.Player.Blue,
 	/* Hex */
 	hexSpace: 5,
 	hexWidth: 70,
@@ -16,6 +17,8 @@ var settings = {
 	},
 	/* Colors */
 	colorEmpty: 0x777777,
+	colorDark: 0x333333,
+	colorLight: 0xAAAAAA,
 	colorRed: 0xFF5858,
 	colorRedSelected: 0xB20000,
 	colorBlue: 0x4786B6,
@@ -122,11 +125,15 @@ var createHex = function (hex) {
 		this.alpha = 1.0;
 	};
 	if (hex.click != null) {
-		sprite.click = hex.click;
+		sprite.pointertap = hex.click;
 	} else {
-		sprite.click = function () {
+		sprite.pointertap = function () {
 			var index = hex.id;
-			/* $(".hex-menu").fadeOut();*/
+
+			// Don't allow moves when it's the computer's turn
+			if (CHASE.AI.Board.playerToMove == settings.computerPlays) {
+				return;
+			}
 
 			// Don't allow moves after the game is over
 			if (CHASE.AI.Position.getWinner(CHASE.AI.Board) != 0) {
@@ -250,16 +257,19 @@ var displayBoard = function () {
 			}
 			displayText(Math.abs(CHASE.AI.Board.tiles[i]) + addon, hex.center);
 		} else if (i == 40) {
-			displayText("CH", hex.center);
+			// The chamber
+			var color = CHASE.AI.Board.playerToMove == CHASE.AI.Player.Blue ? settings.colorBlueSelected : settings.colorRedSelected;
+			displayText("CH", hex.center, color);
 		}
 	}
 }
 
-var displayText = function (text, location) {
+var displayText = function (text, location, color) {
 	const style = new PIXI.TextStyle({
 		fontFamily: 'Arial',
 		fontSize: 96,
-		fontWeight: 'bold'
+		fontWeight: 'bold',
+		fill: typeof color !== "undefined" ? color : 0x000000
 	});
 	const txt = new PIXI.Text(text, style);
 	txt.x = location.x;
@@ -441,6 +451,8 @@ app.ticker.add((delta) => {
 						hexTiles[i].sprite.texture = settings.hexTexture(hexTiles[i].points, settings.colorRedSelected);
 					}
 				}
+			} else {
+				setHexColor(i, settings.colorLight);
 			}
 		}
 		// Possible moves

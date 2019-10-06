@@ -8,10 +8,10 @@ var settings = {
 	/* Hex */
 	hexSpace: 5,
 	hexWidth: 70,
-	hexHeight: function() { 
+	hexHeight: function () {
 		return (2 * this.hexWidth) / Math.sqrt(3);
 	},
-	rowOffset: function() {
+	rowOffset: function () {
 		return this.hexHeight() + (3 * this.hexSpace - this.hexWidth) / (2 * Math.sqrt(3));
 	},
 	/* Colors */
@@ -21,7 +21,7 @@ var settings = {
 	colorBlue: 0x4499FF,
 	colorBlueSelected: 0x1166AA,
 	colorPossibleMove: 0x773399,
-	hexTexture: function(points, color, drawOutline, outlinePoints, outlineColor) {
+	hexTexture: function (points, color, drawOutline, outlinePoints, outlineColor) {
 		const graphics = new PIXI.Graphics();
 		graphics.lineStyle(0);
 		if (drawOutline) {
@@ -44,11 +44,11 @@ var ui = {
 };
 
 // Initialize app
-var app = new PIXI.Application({ 
-    autoResize: true,
-    backgroundColor: 0xEEEEEE,
-    antialias: true,
-    resolution: 2
+var app = new PIXI.Application({
+	autoResize: true,
+	backgroundColor: 0xEEEEEE,
+	antialias: true,
+	resolution: 2
 });
 document.querySelector('#chase').appendChild(app.view);
 
@@ -61,8 +61,7 @@ var createHex = function (hex) {
 	var x = settings.hexSpace + (settings.hexSpace + settings.hexWidth) * columnIndex;
 	var y = settings.rowOffset() * rowIndex + settings.hexSpace;
 
-	if (rowIndex % 2 == 0)
-	{
+	if (rowIndex % 2 == 0) {
 		// Inset rows
 		x += insetOffset;
 	}
@@ -90,41 +89,41 @@ var createHex = function (hex) {
 		outlineWidth / 2.0, 0
 	];
 
-    const texture = settings.hexTexture(points, settings.colorEmpty);
+	const texture = settings.hexTexture(points, settings.colorEmpty);
 
-    const sprite = new PIXI.Sprite(texture);
-    sprite.x = x;
-    sprite.y = y;
-    sprite.anchor.set(0.0, 0.0);
-    sprite.interactive = true;
-    sprite.hitArea = new PIXI.Polygon(points);
-    
-    sprite.pointerover = function () {
+	const sprite = new PIXI.Sprite(texture);
+	sprite.x = x;
+	sprite.y = y;
+	sprite.anchor.set(0.0, 0.0);
+	sprite.interactive = true;
+	sprite.hitArea = new PIXI.Polygon(points);
+
+	sprite.pointerover = function () {
 		this.alpha = 0.5;
-    };
-    sprite.pointerout = function () {
+	};
+	sprite.pointerout = function () {
 		this.alpha = 1.0;
 	};
-	sprite.click = function () {		
-		var index = hex.id;	
+	sprite.click = function () {
+		var index = hex.id;
 		/* $(".hex-menu").fadeOut();*/
-		
+
 		// Don't allow moves after the game is over
 		if (CHASE.AI.Position.getWinner(CHASE.AI.Board) != 0) {
 			ui.selectedFromIndex = -1;
 			ui.selectedToIndex = -1;
 			return;
 		}
-		
+
 		if (ui.selectedFromIndex >= 0) {
 			if (ui.selectedFromIndex == index) {
 				// Unselect an already selected tile
 				ui.selectedFromIndex = -1;
 			} else {
 				ui.selectedToIndex = index;
-				
+
 				var moves = CHASE.AI.Position.getValidMoves(CHASE.AI.Board);
-				
+
 				// Look for moves that transfer a piece value
 				var transfers = [];
 				for (var i = 0; i < moves.length; i++) {
@@ -132,7 +131,7 @@ var createHex = function (hex) {
 						transfers.push(moves[i].increment);
 					}
 				}
-				
+
 				if (transfers.length > 0) {
 					// Initialize all the valid point transfer options
 					/* $("#menu1, #menu2, #menu3, #menu4, #menu5").addClass("disabled-menu");
@@ -161,17 +160,17 @@ var createHex = function (hex) {
 			// If there's a valid move from this tile
 			var moves = CHASE.AI.Position.getValidMoves(CHASE.AI.Board);
 			for (var i = 0; i < moves.length; i++) {
-				if (moves[i].fromIndex == index) {					
+				if (moves[i].fromIndex == index) {
 					ui.selectedFromIndex = index;
 					break;
 				}
 			}
-			
+
 			// If we need to distribute points after a capture
 			if (CHASE.AI.Board.pointsToDistribute > 0) {
 				for (var i = 0; i < moves.length; i++) {
 					if (moves[i].toIndex == index) {
-						CHASE.AI.Position.makeMove(moves[i]);							
+						CHASE.AI.Position.makeMove(moves[i]);
 						ui.selectedFromIndex = -1;
 						ui.selectedToIndex = -1;
 						break;
@@ -179,13 +178,13 @@ var createHex = function (hex) {
 				}
 			}
 		}
-		
+
 		/*ui.refresh();*/
-		
+
 		console.log("Clicked Hex #" + index);
 	}
-    
-    return {
+
+	return {
 		color: settings.colorEmpty,
 		points: points,
 		outline: outline,
@@ -197,7 +196,7 @@ var hexTiles = [];
 var initializeBoard = function (hex) {
 	// Clear the stage
 	hexTiles = [];
-	while (app.stage.children[0]) { 
+	while (app.stage.children[0]) {
 		app.stage.removeChild(app.stage.children[0]);
 	}
 	// Create the hex grid
@@ -220,7 +219,7 @@ function resize() {
 	// Resize the tiles based on the new app height
 	// const newWidthBasedOnHeight = (2 * Math.sqrt(3) * parent.clientHeight - (4 * Math.sqrt(3) + 24) * settings.hexSpace) / 30.0;
 	const newWidthBasedOnHeight = ((12 + 2 * Math.sqrt(3)) * settings.hexSpace - Math.sqrt(3) * parent.clientHeight) / -14.0;
-	
+
 	// Resise to whatever fits best
 	settings.hexWidth = Math.min(newWidthBasedOnWidth, newWidthBasedOnHeight);
 
@@ -235,7 +234,7 @@ CHASE.AI.NewGame();
 app.ticker.add((delta) => {
 	var position = CHASE.AI.Board;
 	var winner = CHASE.AI.Position.getWinner(CHASE.AI.Board);
-	
+
 	// Refresh the values of the pieces on the board
 	for (var i = 0; i < 81; i++) {
 		if (i != 40) {
@@ -273,7 +272,7 @@ app.ticker.add((delta) => {
 		for (var i = 0; i < moves.length; i++) {
 			if (moves[i].fromIndex == ui.selectedFromIndex) {
 				var move = moves[i].toIndex;
-				hexTiles[move].sprite.texture = 
+				hexTiles[move].sprite.texture =
 					settings.hexTexture(hexTiles[move].points, hexTiles[move].color, true, hexTiles[move].outline, settings.colorPossibleMove);
 			}
 		}
